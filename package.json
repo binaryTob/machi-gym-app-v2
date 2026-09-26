@@ -1,0 +1,16 @@
+{
+  "name": "machi-gym-app-v2",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "dev": "corepack pnpm --filter @machi-gym/contracts build && corepack pnpm --parallel --filter @machi-gym/api --filter @machi-gym/web dev",
+    "lint": "corepack pnpm -r lint",
+    "typecheck": "corepack pnpm -r typecheck",
+    "test": "corepack pnpm -r test",
+    "test:e2e": "corepack pnpm --filter @machi-gym/web test:e2e",
+    "build": "corepack pnpm -r build",
+    "db:generate": "corepack pnpm --filter @machi-gym/api db:generate",
+    "db:migrate": "corepack pnpm --filter @machi-gym/api db:migrate",
+    "db:seed": "corepack pnpm --filter @machi-gym/contracts build && corepack pnpm --filter @machi-gym/api db:seed"
+  }
+}

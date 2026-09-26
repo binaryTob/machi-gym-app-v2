@@ -1,0 +1,1290 @@
+// PROPOSAL ONLY. This file documents the intended data model and is not a migration.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum MembershipRole {
+  ADMIN
+  TRAINER
+  STUDENT
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  DISABLED
+}
+
+enum MfaFactorType {
+  TOTP
+  WEBAUTHN
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum UnitSystem {
+  METRIC
+  IMPERIAL
+}
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  NOVICE
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum TrainingGoal {
+  WEIGHT_LOSS
+  HYPERTROPHY
+  STRENGTH
+  BODY_RECOMPOSITION
+  GENERAL_FITNESS
+  SPORT_PERFORMANCE
+}
+
+enum ConstraintType {
+  LIMITATION
+  DECLARED_INJURY
+  RECURRING_DISCOMFORT
+}
+
+enum ConstraintStatus {
+  ACTIVE
+  RESOLVED
+}
+
+enum BodyRegion {
+  HEAD_NECK
+  LEFT_SHOULDER
+  RIGHT_SHOULDER
+  LEFT_ARM
+  RIGHT_ARM
+  LEFT_ELBOW
+  RIGHT_ELBOW
+  LEFT_WRIST_HAND
+  RIGHT_WRIST_HAND
+  CHEST
+  UPPER_BACK
+  LOWER_BACK
+  ABDOMEN
+  LEFT_HIP
+  RIGHT_HIP
+  LEFT_THIGH
+  RIGHT_THIGH
+  LEFT_QUADRICEPS
+  RIGHT_QUADRICEPS
+  LEFT_HAMSTRING
+  RIGHT_HAMSTRING
+  LEFT_CALF
+  RIGHT_CALF
+  LEFT_KNEE
+  RIGHT_KNEE
+  LEFT_LOWER_LEG
+  RIGHT_LOWER_LEG
+  LEFT_ANKLE_FOOT
+  RIGHT_ANKLE_FOOT
+  OTHER
+}
+
+enum MeasurementSource {
+  TRAINER_RECORDED
+  STUDENT_REPORTED
+  IMPORTED
+}
+
+enum StudentProfileStatus {
+  INCOMPLETE
+  READY
+  ARCHIVED
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  FOREARMS
+  CORE
+  GLUTES
+  QUADRICEPS
+  HAMSTRINGS
+  CALVES
+  LOWER_BACK
+  FULL_BODY
+  OTHER
+}
+
+enum Equipment {
+  BODYWEIGHT
+  BARBELL
+  DUMBBELL
+  KETTLEBELL
+  MACHINE
+  CABLE
+  RESISTANCE_BAND
+  BENCH
+  PULL_UP_BAR
+  CARDIO_MACHINE
+  SMITH_MACHINE
+  OTHER
+}
+
+enum MovementPattern {
+  HORIZONTAL_PUSH
+  VERTICAL_PUSH
+  HORIZONTAL_PULL
+  VERTICAL_PULL
+  SQUAT
+  HINGE
+  LUNGE
+  CARRY
+  ISOLATION
+  ROTATION
+  ANTI_ROTATION
+  FLEXION
+  EXTENSION
+  CONDITIONING
+}
+
+enum ExerciseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ExercisePerformanceMode {
+  WEIGHT_REPS
+  REPS_ONLY
+}
+
+enum LoadEntryConvention {
+  TOTAL_EXTERNAL_LOAD
+  PER_IMPLEMENT
+  MACHINE_STACK
+}
+
+enum ExerciseMediaType {
+  GIF
+  IMAGE
+  VIDEO
+  THUMBNAIL
+  ANIMATION
+}
+
+enum MediaLicenseStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PlanVersionStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+  VOID
+}
+
+enum TrainingPlanStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum PlanVersionSource {
+  MANUAL
+  AI_ASSISTED
+}
+
+enum IntensityMode {
+  NONE
+  RIR
+  RPE
+}
+
+enum WorkoutSessionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  PARTIAL
+  CANCELLED
+  SKIPPED
+}
+
+enum PartialWorkoutReason {
+  LACK_OF_TIME
+  FATIGUE
+  DISCOMFORT_OR_PAIN
+  FEELING_UNWELL
+  OTHER
+}
+
+enum CancellationReason {
+  SCHEDULE_CHANGE
+  FEELING_UNWELL
+  OTHER
+}
+
+enum CancellationActorType {
+  STUDENT
+  TRAINER
+  ADMIN
+  SYSTEM
+}
+
+enum SafetyEventType {
+  DISCOMFORT_OR_PAIN
+  FEELING_UNWELL
+}
+
+enum SafetyEventSource {
+  EARLY_FINISH
+  SESSION_FEEDBACK
+  TRAINER_RECORDED
+}
+
+enum SafetyRuleSeverity {
+  BLOCK
+  REVIEW_REQUIRED
+}
+
+enum AuditActorType {
+  MEMBERSHIP
+  SYSTEM
+  WORKER
+}
+
+enum SetCompletionState {
+  NOT_STARTED
+  COMPLETED
+}
+
+enum PerceivedState {
+  VERY_GOOD
+  GOOD
+  NORMAL
+  DIFFICULT
+  VERY_DIFFICULT
+}
+
+enum RecoveryState {
+  VERY_RECOVERED
+  RECOVERED
+  NORMAL
+  TIRED
+  VERY_TIRED
+}
+
+enum AiPurpose {
+  PLAN_PROPOSAL
+  MONTHLY_NARRATIVE
+}
+
+enum AiRequestStatus {
+  QUEUED
+  BUILDING_CONTEXT
+  GENERATING
+  VALIDATING
+  READY
+  FAILED
+  CANCELLED
+}
+
+enum AiProposalStatus {
+  READY
+  APPLIED_TO_DRAFT
+  REJECTED
+  EXPIRED
+}
+
+enum MonthlySummaryStatus {
+  METRICS_READY
+  NARRATIVE_PENDING
+  COMPLETE
+  NARRATIVE_FAILED
+}
+
+model Organization {
+  id           String     @id @default(cuid())
+  name         String
+  slug         String     @unique
+  timezone     String
+  defaultUnits UnitSystem @default(METRIC)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships        Membership[]
+  trainers           TrainerProfile[]
+  students           StudentProfile[]
+  studentInvitations StudentInvitation[]
+  assignments        TrainerStudentAssignment[]
+  exercises          Exercise[]
+  trainingPlans      TrainingPlan[]
+  planAssignments    StudentPlanAssignment[]
+  workoutSessions    WorkoutSession[]
+  sessionFeedbacks   SessionFeedback[]
+  discomfortReports  DiscomfortReport[]
+  aiRequests         AiGenerationRequest[]
+  monthlySummaries   MonthlySummary[]
+  auditEvents        AuditEvent[]
+}
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  passwordHash    String
+  displayName     String
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  memberships         Membership[]
+  authSessions        AuthSession[]
+  passwordResetTokens PasswordResetToken[]
+  mfaFactors          MfaFactor[]
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MembershipRole
+  status         MembershipStatus @default(INVITED)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  trainerProfile TrainerProfile?
+  studentProfile StudentProfile? @relation("StudentAccountMembership")
+
+  authoredNotes              TrainerNote[]               @relation("TrainerNoteAuthor")
+  createdPlans               TrainingPlan[]              @relation("PlanCreator")
+  assignedPlans              StudentPlanAssignment[]     @relation("PlanAssigner")
+  createdPlanVersions        TrainingPlanVersion[]       @relation("PlanVersionCreator")
+  publishedPlanVersions      TrainingPlanVersion[]       @relation("PlanVersionPublisher")
+  retiredPlanVersions        TrainingPlanVersion[]       @relation("PlanVersionRetirer")
+  voidedPlanVersions         TrainingPlanVersion[]       @relation("PlanVersionVoider")
+  scheduledSessions          WorkoutSession[]            @relation("SessionScheduler")
+  cancelledSessions          WorkoutSession[]            @relation("SessionCanceller")
+  skippedSessions            WorkoutSession[]            @relation("SessionSkipper")
+  excusedSessions            WorkoutSession[]            @relation("SessionExcuser")
+  requestedAiJobs            AiGenerationRequest[]       @relation("AiRequester")
+  sentStudentInvitations     StudentInvitation[]         @relation("StudentInvitationSender")
+  reviewedStudentProfiles    StudentProfile[]            @relation("StudentProfileReviewer")
+  auditEvents                AuditEvent[]                @relation("AuditActor")
+  safetyAcknowledgements     PlanSafetyAcknowledgement[]
+  setCorrections             SetPerformanceCorrection[]
+  proposalApplications       AiProposalApplication[]
+  recordedWeightMeasurements BodyWeightMeasurement[]     @relation("WeightMeasurementActor")
+  verifiedExerciseMedia      ExerciseMedia[]             @relation("ExerciseMediaVerifier")
+  authSessions               AuthSession[]
+  recordedSafetyEvents       SessionSafetyEvent[]        @relation("SafetyEventRecorder")
+  rejectedAiProposals        AiProposal[]                @relation("AiProposalRejecter")
+
+  @@unique([organizationId, userId])
+  @@unique([id, organizationId])
+  @@unique([id, organizationId, userId])
+  @@index([organizationId, role, status])
+}
+
+model AuthSession {
+  id                String    @id @default(cuid())
+  userId            String
+  organizationId    String
+  membershipId      String
+  tokenHash         String    @unique
+  idleExpiresAt     DateTime
+  absoluteExpiresAt DateTime
+  revokedAt         DateTime?
+  lastUsedAt        DateTime?
+  ipHash            String?
+  userAgentHash     String?
+  createdAt         DateTime  @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membership Membership @relation(fields: [membershipId, organizationId, userId], references: [id, organizationId, userId], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([membershipId, revokedAt])
+  @@index([idleExpiresAt])
+  @@index([absoluteExpiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model MfaFactor {
+  id               String        @id @default(cuid())
+  userId           String
+  type             MfaFactorType
+  secretCiphertext String?
+  credentialData   Json?
+  verifiedAt       DateTime?
+  disabledAt       DateTime?
+  createdAt        DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, disabledAt])
+}
+
+model TrainerProfile {
+  id             String   @id @default(cuid())
+  organizationId String
+  membershipId   String   @unique
+  bio            String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  membership   Membership                 @relation(fields: [membershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  assignments  TrainerStudentAssignment[]
+
+  @@unique([membershipId, organizationId])
+  @@unique([id, organizationId])
+}
+
+model StudentProfile {
+  id                            String               @id @default(cuid())
+  organizationId                String
+  membershipId                  String?              @unique
+  displayName                   String
+  contactEmail                  String?
+  birthDate                     DateTime?            @db.Date
+  heightCm                      Decimal?             @db.Decimal(5, 2)
+  status                        StudentProfileStatus @default(INCOMPLETE)
+  trainingFrequencyPerWeek      Int?
+  availableDays                 Weekday[]
+  approximateSessionMinutes     Int?
+  activityLevel                 ActivityLevel?
+  experienceLevel               ExperienceLevel?
+  primaryGoal                   TrainingGoal?
+  secondaryGoals                TrainingGoal[]
+  timezone                      String?
+  preferredUnits                UnitSystem?
+  profileReviewedAt             DateTime?
+  profileReviewedByMembershipId String?
+  planningRevision              Int                  @default(1)
+  reviewedPlanningRevision      Int?
+  createdAt                     DateTime             @default(now())
+  updatedAt                     DateTime             @updatedAt
+  archivedAt                    DateTime?
+  version                       Int                  @default(1)
+
+  organization       Organization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  membership         Membership?                @relation("StudentAccountMembership", fields: [membershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  profileReviewedBy  Membership?                @relation("StudentProfileReviewer", fields: [profileReviewedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  assignments        TrainerStudentAssignment[]
+  invitations        StudentInvitation[]
+  weightMeasurements BodyWeightMeasurement[]
+  externalActivities ExternalActivity[]
+  constraints        StudentConstraint[]
+  trainerNotes       TrainerNote[]
+  planAssignments    StudentPlanAssignment[]
+  workoutSessions    WorkoutSession[]
+  sessionFeedbacks   SessionFeedback[]
+  discomfortReports  DiscomfortReport[]
+  aiRequests         AiGenerationRequest[]
+  monthlySummaries   MonthlySummary[]
+
+  @@unique([membershipId, organizationId])
+  @@unique([id, organizationId])
+  @@index([organizationId, archivedAt])
+  @@index([organizationId, displayName])
+}
+
+model StudentInvitation {
+  id                    String           @id @default(cuid())
+  organizationId        String
+  studentId             String
+  invitedByMembershipId String
+  email                 String
+  tokenHash             String           @unique
+  status                InvitationStatus @default(PENDING)
+  expiresAt             DateTime
+  acceptedAt            DateTime?
+  revokedAt             DateTime?
+  createdAt             DateTime         @default(now())
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  student      StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  invitedBy    Membership     @relation("StudentInvitationSender", fields: [invitedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, email, status])
+  @@index([studentId, status])
+  @@index([status, expiresAt])
+}
+
+model TrainerStudentAssignment {
+  id             String    @id @default(cuid())
+  organizationId String
+  trainerId      String
+  studentId      String
+  active         Boolean   @default(true)
+  assignedAt     DateTime  @default(now())
+  endedAt        DateTime?
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  trainer      TrainerProfile @relation(fields: [trainerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  student      StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, studentId, active])
+  @@index([organizationId, trainerId, active, studentId])
+}
+
+model BodyWeightMeasurement {
+  id                     String            @id @default(cuid())
+  organizationId         String
+  studentId              String
+  recordedByMembershipId String
+  replacesMeasurementId  String?           @unique
+  weightKg               Decimal           @db.Decimal(6, 2)
+  measuredAt             DateTime
+  source                 MeasurementSource
+  note                   String?
+  correctionReason       String?
+  createdAt              DateTime          @default(now())
+
+  student               StudentProfile         @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  recordedBy            Membership             @relation("WeightMeasurementActor", fields: [recordedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  replacesMeasurement   BodyWeightMeasurement? @relation("WeightMeasurementReplacement", fields: [replacesMeasurementId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  replacedByMeasurement BodyWeightMeasurement? @relation("WeightMeasurementReplacement")
+
+  @@unique([id, organizationId])
+  @@unique([replacesMeasurementId, organizationId])
+  @@index([studentId, measuredAt])
+}
+
+model ExternalActivity {
+  id                     String   @id @default(cuid())
+  studentId              String
+  name                   String
+  weeklyFrequency        Int?
+  typicalDurationMinutes Int?
+  intensity              String?
+  active                 Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId, active])
+}
+
+model StudentConstraint {
+  id                  String           @id @default(cuid())
+  studentId           String
+  type                ConstraintType
+  status              ConstraintStatus @default(ACTIVE)
+  bodyRegion          BodyRegion?
+  description         String
+  planningInstruction String?
+  declaredAt          DateTime         @default(now())
+  resolvedAt          DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId, status, type])
+  @@index([studentId, bodyRegion, status])
+}
+
+model TrainerNote {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  studentId          String
+  authorMembershipId String
+  content            String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  archivedAt         DateTime?
+
+  student StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  author  Membership     @relation("TrainerNoteAuthor", fields: [authorMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([studentId, createdAt])
+}
+
+model Exercise {
+  id                    String                  @id @default(cuid())
+  organizationId        String
+  name                  String
+  slug                  String
+  aliases               String[]
+  searchText            String
+  description           String
+  primaryMuscleGroup    MuscleGroup
+  secondaryMuscleGroups MuscleGroup[]
+  equipment             Equipment[]
+  movementPattern       MovementPattern
+  difficulty            ExerciseDifficulty
+  performanceMode       ExercisePerformanceMode
+  loadEntryConvention   LoadEntryConvention?
+  loadMultiplier        Decimal                 @default(1) @db.Decimal(5, 2)
+  instructions          String
+  commonMistakes        String
+  cautionNotes          String?
+  contraindicationTags  String[]
+  active                Boolean                 @default(true)
+  aiEligible            Boolean                 @default(false)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  version               Int                     @default(1)
+
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  media               ExerciseMedia[]
+  programmedExercises ProgrammedExercise[]
+  sessionExercises    SessionExercise[]
+  discomfortReports   DiscomfortReport[]
+
+  @@unique([organizationId, slug])
+  @@unique([id, organizationId])
+  @@index([organizationId, active, name])
+  @@index([organizationId, primaryMuscleGroup, active])
+  @@index([organizationId, movementPattern, active])
+}
+
+model ExerciseMedia {
+  id                     String             @id @default(cuid())
+  organizationId         String
+  exerciseId             String
+  type                   ExerciseMediaType
+  url                    String
+  source                 String
+  sourceUrl              String?
+  licenseName            String
+  licenseUrl             String?
+  attributionText        String
+  licenseStatus          MediaLicenseStatus @default(PENDING)
+  verifiedByMembershipId String?
+  verifiedAt             DateTime?
+  active                 Boolean            @default(false)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  exercise   Exercise    @relation(fields: [exerciseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  verifiedBy Membership? @relation("ExerciseMediaVerifier", fields: [verifiedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([exerciseId, active, licenseStatus])
+  @@unique([exerciseId, type, url])
+}
+
+model TrainingPlan {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  createdByMembershipId String
+  name                  String
+  description           String?
+  goal                  TrainingGoal
+  status                TrainingPlanStatus @default(DRAFT)
+  version               Int @default(1)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  archivedAt            DateTime?
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdBy    Membership            @relation("PlanCreator", fields: [createdByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  versions     TrainingPlanVersion[]
+  assignments StudentPlanAssignment[]
+
+  @@unique([id, organizationId])
+  @@index([organizationId, status, createdAt])
+}
+
+model TrainingPlanVersion {
+  id                      String            @id @default(cuid())
+  organizationId          String
+  trainingPlanId          String
+  versionNumber           Int
+  status                  PlanVersionStatus @default(DRAFT)
+  source                  PlanVersionSource @default(MANUAL)
+  title                   String
+  description             String?
+  goal                    TrainingGoal
+  startsOn                DateTime?         @db.Date
+  endsOn                  DateTime?         @db.Date
+  createdByMembershipId   String
+  publishedByMembershipId String?
+  publishedAt             DateTime?
+  retiredByMembershipId   String?
+  retiredAt               DateTime?
+  retirementReason        String?
+  voidedByMembershipId    String?
+  voidedAt                DateTime?
+  voidReason              String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  revision                Int               @default(1)
+
+  trainingPlan         TrainingPlan            @relation(fields: [trainingPlanId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy            Membership              @relation("PlanVersionCreator", fields: [createdByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  publishedBy          Membership?             @relation("PlanVersionPublisher", fields: [publishedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  retiredBy            Membership?             @relation("PlanVersionRetirer", fields: [retiredByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  voidedBy             Membership?             @relation("PlanVersionVoider", fields: [voidedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  workouts             WorkoutTemplate[]
+  validationFindings   PlanValidationFinding[]
+  proposalApplications AiProposalApplication[]
+  assignments          StudentPlanAssignment[]
+  workoutSessions      WorkoutSession[]
+
+  @@unique([trainingPlanId, versionNumber])
+  @@unique([id, organizationId])
+  @@unique([id, organizationId, trainingPlanId])
+  @@index([trainingPlanId, status])
+}
+
+model WorkoutTemplate {
+  id                       String   @id @default(cuid())
+  organizationId           String
+  trainingPlanVersionId    String
+  name                     String
+  description              String?
+  order                    Int
+  expectedDurationMinutes Int?
+  dayLabel                 String?
+  trainerNotes             String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  trainingPlanVersion TrainingPlanVersion  @relation(fields: [trainingPlanVersionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  programmedExercises ProgrammedExercise[]
+  workoutSessions     WorkoutSession[]
+
+  @@unique([trainingPlanVersionId, order])
+  @@unique([id, organizationId])
+}
+
+model ProgrammedExercise {
+  id                           String                   @id @default(cuid())
+  organizationId               String
+  workoutTemplateId            String
+  exerciseId                   String
+  order                        Int
+  targetSets                   Int
+  targetRepsMin                Int
+  targetRepsMax                Int
+  intensityMode                IntensityMode            @default(NONE)
+  targetRir                    Int?
+  targetRpe                    Decimal?                 @db.Decimal(3, 1)
+  restSeconds                  Int
+  trainerNotes                 String?
+  suggestedLoadKg              Decimal?                 @db.Decimal(7, 2)
+  exerciseVersionSnapshot      Int?
+  primaryMuscleSnapshot        MuscleGroup?
+  performanceModeSnapshot      ExercisePerformanceMode?
+  loadEntryConventionSnapshot  LoadEntryConvention?
+  loadMultiplierSnapshot       Decimal?                 @db.Decimal(5, 2)
+  exerciseNameSnapshot         String?
+  instructionsSnapshot         String?
+  commonMistakesSnapshot       String?
+  cautionNotesSnapshot         String?
+  contraindicationTagsSnapshot String[]
+  createdAt                    DateTime                 @default(now())
+  updatedAt                    DateTime                 @updatedAt
+
+  workoutTemplate  WorkoutTemplate   @relation(fields: [workoutTemplateId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  exercise         Exercise          @relation(fields: [exerciseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  sessionExercises SessionExercise[]
+
+  @@unique([workoutTemplateId, order])
+  @@unique([workoutTemplateId, exerciseId])
+  @@unique([id, organizationId])
+  @@index([exerciseId])
+}
+
+model StudentPlanAssignment {
+  id                     String @id @default(cuid())
+  organizationId         String
+  studentId              String
+  trainingPlanId         String
+  trainingPlanVersionId  String
+  assignedByMembershipId String
+  startDate              DateTime @db.Date
+  endDate                DateTime? @db.Date
+  active                 Boolean @default(true)
+  assignedAt             DateTime @default(now())
+  endedAt                DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  student StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  plan TrainingPlan @relation(fields: [trainingPlanId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  planVersion TrainingPlanVersion @relation(fields: [trainingPlanVersionId, organizationId, trainingPlanId], references: [id, organizationId, trainingPlanId], onDelete: Restrict)
+  assignedBy Membership @relation("PlanAssigner", fields: [assignedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  workoutSessions WorkoutSession[]
+
+  @@unique([id, organizationId])
+  @@unique([id, organizationId, trainingPlanVersionId])
+  @@index([organizationId, studentId, assignedAt])
+}
+
+model PlanValidationFinding {
+  id                    String             @id @default(cuid())
+  organizationId        String
+  trainingPlanVersionId String
+  draftRevision         Int
+  contentHash           String
+  ruleCode              String
+  ruleVersion           String
+  severity              SafetyRuleSeverity
+  message               String
+  createdAt             DateTime           @default(now())
+
+  trainingPlanVersion TrainingPlanVersion        @relation(fields: [trainingPlanVersionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  acknowledgement     PlanSafetyAcknowledgement?
+
+  @@unique([trainingPlanVersionId, draftRevision, ruleCode, ruleVersion])
+  @@unique([id, organizationId])
+}
+
+model PlanSafetyAcknowledgement {
+  id                         String   @id @default(cuid())
+  organizationId             String
+  findingId                  String   @unique
+  acknowledgedByMembershipId String
+  rationale                  String
+  acknowledgedAt             DateTime @default(now())
+
+  finding        PlanValidationFinding @relation(fields: [findingId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  acknowledgedBy Membership            @relation(fields: [acknowledgedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([findingId, organizationId])
+}
+
+model WorkoutSession {
+  id                                String                 @id @default(cuid())
+  organizationId                    String
+  studentId                         String
+  workoutTemplateId                 String
+  studentPlanAssignmentId           String
+  trainingPlanVersionId             String
+  scheduledByMembershipId           String
+  scheduleRequestKey                String
+  scheduledDate                     DateTime               @db.Date
+  timezone                          String
+  status                            WorkoutSessionStatus   @default(NOT_STARTED)
+  snapshotSealed                    Boolean                @default(false)
+  startedAt                         DateTime?
+  finishedAt                        DateTime?
+  partialReason                     PartialWorkoutReason?
+  partialReasonDetail               String?
+  cancellationActorType             CancellationActorType?
+  cancellationReason                CancellationReason?
+  cancellationDetail                String?
+  cancellationExcused               Boolean                @default(false)
+  cancelledByMembershipId           String?
+  cancellationExcusedByMembershipId String?
+  cancellationExcusedAt             DateTime?
+  cancellationExcuseReason          String?
+  cancelledAt                       DateTime?
+  skippedByMembershipId             String?
+  skippedAt                         DateTime?
+  createdAt                         DateTime               @default(now())
+  updatedAt                         DateTime               @updatedAt
+  version                           Int                    @default(1)
+
+  organization          Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  student               StudentProfile       @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  workoutTemplate       WorkoutTemplate      @relation(fields: [workoutTemplateId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  studentPlanAssignment StudentPlanAssignment @relation(fields: [studentPlanAssignmentId, organizationId, trainingPlanVersionId], references: [id, organizationId, trainingPlanVersionId], onDelete: Restrict)
+  planVersion           TrainingPlanVersion @relation(fields: [trainingPlanVersionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  scheduledBy           Membership           @relation("SessionScheduler", fields: [scheduledByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  cancelledBy           Membership?          @relation("SessionCanceller", fields: [cancelledByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  skippedBy             Membership?          @relation("SessionSkipper", fields: [skippedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  cancellationExcusedBy Membership?          @relation("SessionExcuser", fields: [cancellationExcusedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  exercises             SessionExercise[]
+  feedback              SessionFeedback?
+  safetyEvents          SessionSafetyEvent[]
+  discomfortReports     DiscomfortReport[]
+
+  @@unique([id, organizationId])
+  @@unique([id, organizationId, studentId])
+  @@unique([organizationId, scheduleRequestKey])
+  @@index([organizationId, scheduledDate, status])
+  @@index([studentId, scheduledDate, status])
+  @@index([studentId, finishedAt, id])
+}
+
+model SessionExercise {
+  id                           String                  @id @default(cuid())
+  organizationId               String
+  workoutSessionId             String
+  programmedExerciseId         String
+  exerciseId                   String
+  order                        Int
+  exerciseNameSnapshot         String
+  primaryMuscleSnapshot        MuscleGroup
+  performanceModeSnapshot      ExercisePerformanceMode
+  loadEntryConventionSnapshot  LoadEntryConvention?
+  loadMultiplierSnapshot       Decimal                 @db.Decimal(5, 2)
+  instructionsSnapshot         String
+  commonMistakesSnapshot       String
+  cautionNotesSnapshot         String?
+  contraindicationTagsSnapshot String[]
+  targetSets                   Int
+  targetRepsMin                Int
+  targetRepsMax                Int
+  intensityMode                IntensityMode
+  targetRir                    Int?
+  targetRpe                    Decimal?                @db.Decimal(3, 1)
+  restSeconds                  Int
+  trainerNotes                 String?
+  suggestedLoadKg              Decimal?                @db.Decimal(7, 2)
+  createdAt                    DateTime                @default(now())
+
+  workoutSession     WorkoutSession     @relation(fields: [workoutSessionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  programmedExercise ProgrammedExercise @relation(fields: [programmedExerciseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  exercise           Exercise           @relation(fields: [exerciseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  setPerformances    SetPerformance[]
+
+  @@unique([workoutSessionId, order])
+  @@unique([workoutSessionId, programmedExerciseId])
+  @@unique([id, organizationId])
+  @@index([workoutSessionId, exerciseId])
+}
+
+model SetPerformance {
+  id                String             @id @default(cuid())
+  organizationId    String
+  sessionExerciseId String
+  setNumber         Int
+  completionState   SetCompletionState @default(NOT_STARTED)
+  actualLoadKg      Decimal?           @db.Decimal(7, 2)
+  actualRepetitions Int?
+  rir               Int?
+  rpe               Decimal?           @db.Decimal(3, 1)
+  completedAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  version           Int                @default(1)
+
+  sessionExercise SessionExercise            @relation(fields: [sessionExerciseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  corrections     SetPerformanceCorrection[]
+
+  @@unique([sessionExerciseId, setNumber])
+  @@unique([id, organizationId])
+}
+
+model SetPerformanceCorrection {
+  id                      String             @id @default(cuid())
+  organizationId          String
+  setPerformanceId        String
+  correctedByMembershipId String
+  revision                Int
+  reason                  String
+  completionState         SetCompletionState
+  actualLoadKg            Decimal?           @db.Decimal(7, 2)
+  actualRepetitions       Int?
+  rir                     Int?
+  rpe                     Decimal?           @db.Decimal(3, 1)
+  completedAt             DateTime?
+  createdAt               DateTime           @default(now())
+
+  setPerformance SetPerformance @relation(fields: [setPerformanceId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  correctedBy    Membership     @relation(fields: [correctedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([setPerformanceId, revision])
+  @@index([setPerformanceId, createdAt])
+}
+
+model SessionSafetyEvent {
+  id                     String            @id @default(cuid())
+  organizationId         String
+  workoutSessionId       String
+  sessionFeedbackId      String?
+  recordedByMembershipId String?
+  type                   SafetyEventType
+  source                 SafetyEventSource
+  bodyRegion             BodyRegion?
+  intensity              Int?
+  notes                  String?
+  createdAt              DateTime          @default(now())
+
+  workoutSession  WorkoutSession   @relation(fields: [workoutSessionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  sessionFeedback SessionFeedback? @relation(fields: [sessionFeedbackId, workoutSessionId, organizationId], references: [id, workoutSessionId, organizationId], onDelete: Restrict)
+  recordedBy      Membership?      @relation("SafetyEventRecorder", fields: [recordedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  discomfortReport DiscomfortReport?
+
+  @@unique([id, workoutSessionId])
+  @@unique([id, workoutSessionId, organizationId])
+  @@index([workoutSessionId, type, createdAt])
+  @@index([bodyRegion, createdAt])
+}
+
+model SessionFeedback {
+  id               String         @id @default(cuid())
+  organizationId   String
+  studentId        String
+  workoutSessionId String         @unique
+  sessionRpe       Int
+  perceivedState   PerceivedState
+  recoveryState    RecoveryState
+  discomfortPresent Boolean
+  generalNotes     String?
+  requestHash      String
+  submittedAt      DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  student StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  workoutSession WorkoutSession       @relation(fields: [workoutSessionId, organizationId, studentId], references: [id, organizationId, studentId], onDelete: Restrict)
+  discomfortReports DiscomfortReport[]
+  safetyEvents   SessionSafetyEvent[]
+
+  @@unique([id, workoutSessionId])
+  @@unique([id, workoutSessionId, organizationId])
+  @@unique([id, organizationId, studentId, workoutSessionId])
+  @@unique([workoutSessionId, organizationId, studentId])
+  @@index([organizationId, studentId, submittedAt])
+}
+
+model DiscomfortReport {
+  id                String @id @default(cuid())
+  organizationId    String
+  studentId         String
+  workoutSessionId  String
+  sessionFeedbackId String
+  safetyEventId     String @unique
+  bodyRegion        BodyRegion
+  otherLocation     String?
+  intensity         Int
+  exerciseId        String?
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  student StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  workoutSession WorkoutSession @relation(fields: [workoutSessionId, organizationId, studentId], references: [id, organizationId, studentId], onDelete: Restrict)
+  sessionFeedback SessionFeedback @relation(fields: [sessionFeedbackId, organizationId, studentId, workoutSessionId], references: [id, organizationId, studentId, workoutSessionId], onDelete: Restrict)
+  safetyEvent SessionSafetyEvent @relation(fields: [safetyEventId, workoutSessionId, organizationId], references: [id, workoutSessionId, organizationId], onDelete: Restrict)
+  exercise Exercise? @relation(fields: [exerciseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([sessionFeedbackId, bodyRegion])
+  @@unique([safetyEventId, workoutSessionId, organizationId])
+  @@index([organizationId, studentId, bodyRegion, createdAt])
+  @@index([organizationId, bodyRegion, createdAt])
+  @@index([exerciseId, createdAt])
+}
+
+model AiGenerationRequest {
+  id                      String          @id @default(cuid())
+  organizationId          String
+  studentId               String
+  requestedByMembershipId String
+  purpose                 AiPurpose
+  status                  AiRequestStatus @default(QUEUED)
+  idempotencyKey          String
+  contextSchemaVersion    String?
+  contextHash             String?
+  contextSnapshot         Json?
+  purgeAt                 DateTime?
+  promptVersion           String?
+  provider                String?
+  model                   String?
+  attemptCount            Int             @default(0)
+  errorCode               String?
+  safeErrorMessage        String?
+  queuedAt                DateTime        @default(now())
+  startedAt               DateTime?
+  completedAt             DateTime?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  student        StudentProfile  @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  requestedBy    Membership      @relation("AiRequester", fields: [requestedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  proposal       AiProposal?
+  monthlySummary MonthlySummary? @relation("MonthlySummaryNarrative")
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([id, organizationId])
+  @@index([organizationId, status, queuedAt])
+  @@index([studentId, purpose, createdAt])
+  @@index([purgeAt])
+}
+
+model AiProposal {
+  id                     String           @id @default(cuid())
+  organizationId         String
+  generationRequestId    String           @unique
+  status                 AiProposalStatus @default(READY)
+  schemaVersion          String
+  normalizedProposal     Json
+  assumptions            Json
+  warnings               Json
+  validationSummary      Json
+  providerRequestRef     String?
+  inputTokens            Int?
+  outputTokens           Int?
+  rejectedAt             DateTime?
+  rejectedByMembershipId String?
+  rejectionReason        String?
+  expiresAt              DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  generationRequest AiGenerationRequest    @relation(fields: [generationRequestId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  rejectedBy        Membership?            @relation("AiProposalRejecter", fields: [rejectedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  application       AiProposalApplication?
+
+  @@unique([generationRequestId, organizationId])
+  @@unique([id, organizationId])
+}
+
+model AiProposalApplication {
+  id                     String   @id @default(cuid())
+  organizationId         String
+  proposalId             String
+  appliedByMembershipId  String
+  resultingPlanVersionId String
+  selectedItems          Json
+  validationRuleVersion  String
+  appliedAt              DateTime @default(now())
+
+  proposal             AiProposal          @relation(fields: [proposalId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  appliedBy            Membership          @relation(fields: [appliedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  resultingPlanVersion TrainingPlanVersion @relation(fields: [resultingPlanVersionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([proposalId, organizationId])
+  @@index([proposalId, appliedAt])
+  @@index([resultingPlanVersionId])
+}
+
+model MonthlySummary {
+  id                      String               @id @default(cuid())
+  organizationId          String
+  studentId               String
+  revision                Int
+  timezone                String
+  supersedesSummaryId     String?              @unique
+  periodStart             DateTime             @db.Date
+  periodEnd               DateTime             @db.Date
+  comparisonPeriodStart   DateTime?            @db.Date
+  comparisonPeriodEnd     DateTime?            @db.Date
+  metricDefinitionVersion String
+  metrics                 Json
+  status                  MonthlySummaryStatus @default(METRICS_READY)
+  narrative               String?
+  narrativeClaims         Json?
+  narrativeProvider       String?
+  narrativeModel          String?
+  narrativePromptVersion  String?
+  narrativeRequestId      String?              @unique
+  narrativeMetricKeys     String[]
+  narrativeValidation     Json?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  student             StudentProfile       @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  narrativeRequest    AiGenerationRequest? @relation("MonthlySummaryNarrative", fields: [narrativeRequestId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  supersedesSummary   MonthlySummary?      @relation("MonthlySummaryRevision", fields: [supersedesSummaryId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  supersededBySummary MonthlySummary?      @relation("MonthlySummaryRevision")
+
+  @@unique([narrativeRequestId, organizationId])
+  @@unique([studentId, periodStart, periodEnd, timezone, metricDefinitionVersion, revision])
+  @@unique([id, organizationId])
+  @@unique([supersedesSummaryId, organizationId])
+  @@index([organizationId, periodStart, periodEnd])
+}
+
+model AuditEvent {
+  id                String         @id @default(cuid())
+  organizationId    String
+  actorMembershipId String?
+  actorType         AuditActorType
+  action            String
+  resourceType      String
+  resourceId        String
+  requestId         String?
+  reason            String?
+  safeChanges       Json?
+  occurredAt        DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor        Membership?  @relation("AuditActor", fields: [actorMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, resourceType, resourceId, occurredAt])
+  @@index([organizationId, actorMembershipId, occurredAt])
+}
+
+// SQL migrations must add constraints Prisma cannot express directly:
+// - partial unique indexes for one ACTIVE and one DRAFT version per reusable plan,
+//   one active primary StudentPlanAssignment per organization/student, one
+//   IN_PROGRESS session per student, one active trainer pair, finalized previous-
+//   performance lookup, nonterminal equivalent AI requests, and one EARLY_FINISH
+//   safety event per session/type; launch also permits one active workspace
+//   membership per user until organization switching is designed;
+// - CHECK constraints for positive revisions/order/counts/durations, date ordering,
+//   load conventions/multipliers, min/max ranges, RIR/RPE mode consistency, feedback
+//   and safety intensity, auth expiry ordering, actor/source consistency, correction
+//   reasons, snapshot completeness before publish, and status metadata coherence;
+// - lineage triggers ensuring measurement/summary revisions keep the same student
+//   and identity, new assignments reference same-org active published versions,
+//   existing assignments may retain retired versions, sessions use their student's
+//   assignment-pinned template, session exercises use
+//   that template's programmed exercise and canonical exercise, and AI/proposal/
+//   report records use the same student, organization, and expected request purpose;
+// - exact-copy triggers proving published catalog snapshots match their exercise and
+//   every session snapshot contains each source programmed exercise exactly once with
+//   unchanged order, prescription, load convention, and technique/safety fields;
+// - transition triggers permitting only documented plan/session/AI/report states,
+//   requiring every workout mutation to lock its session row, and rechecking current
+//   profile revision plus safety findings during publish;
+// - immutability triggers for all non-DRAFT plan content (including VOID), session
+//   snapshots, terminal sessions/feedback/safety facts, effective finalized set facts,
+//   body-weight measurements, AI provenance, metric snapshots immediately after
+//   insertion, completed report revisions, audit events, and correction revisions;
+// - monotonic contiguous correction/report revisions with cycle prevention, plus
+//   body-weight replacement same-student/organization, reason, no-branch, and no-cycle
+//   rules, plus invalidation/recalculation of summaries after accepted corrections;
+// - readiness invalidation when planning fields, activities, or constraints change;
+// - media activation only after complete VERIFIED license provenance;
+// - case-insensitive user/invitation email uniqueness, pending-invitation rules, and
+//   exactly one ADMIN owner with a trainer profile per launch organization; profile
+//   types must match membership roles and the owner is the inviting trainer.

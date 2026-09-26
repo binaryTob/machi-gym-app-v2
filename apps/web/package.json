@@ -1,0 +1,8 @@
+{
+  "name": "@machi-gym/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "dev": "next dev", "build": "next build", "start": "next start", "lint": "eslint app lib components e2e playwright.config.ts --ext .ts,.tsx", "typecheck": "tsc --noEmit", "test": "vitest run app lib components --passWithNoTests", "test:e2e": "playwright test" },
+  "dependencies": { "@machi-gym/contracts": "workspace:*", "next": "^15.5.2", "react": "^19.1.1", "react-dom": "^19.1.1" },
+  "devDependencies": { "@types/node": "^22.18.0", "@types/react": "^19.1.10", "@types/react-dom": "^19.1.7", "@eslint/js": "^9.34.0", "eslint": "^9.34.0", "typescript-eslint": "^8.41.0", "typescript": "^5.9.2", "vitest": "^3.2.4", "@playwright/test": "^1.56.1", "dotenv": "^16.6.1" }
+}

@@ -1,0 +1,44 @@
+name: Phase 1–5 checks
+on:
+  push:
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: machi
+          POSTGRES_PASSWORD: machi
+          POSTGRES_DB: machi
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U machi -d machi" --health-interval 3s
+          --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://machi:machi@localhost:5432/machi?schema=public
+      WEB_ORIGIN: http://localhost:3000
+      SESSION_SECURE: "false"
+      SEED_ADMIN_EMAIL: owner@example.test
+      SEED_ADMIN_PASSWORD: ci-temporary-only-long-password
+      SEED_STUDENT_PASSWORD: ci-student-temporary-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Activate workspace package manager
+        run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm db:generate
+      - run: corepack pnpm db:migrate
+      - run: corepack pnpm db:seed
+      - run: corepack pnpm --filter @machi-gym/contracts build
+      - run: corepack pnpm lint
+      - run: corepack pnpm typecheck
+      - run: corepack pnpm test
+      - run: corepack pnpm build
+      - run: corepack pnpm --filter @machi-gym/api exec prisma validate
+      - run: corepack pnpm --filter @machi-gym/web exec playwright install --with-deps chromium
+      - run: corepack pnpm test:e2e
