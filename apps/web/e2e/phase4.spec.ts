@@ -19,7 +19,8 @@ async function prepare(browser: Browser): Promise<Fixture> {
   const invitation = await coachPage.locator('.notice .mono').first().innerText();
   const studentLink = await coachPage.locator('.roster a').first().getAttribute('href');
   if (!studentLink) throw new Error('Student profile link not returned');
-  const studentId = studentLink.split('/').at(-1)!;
+  if (!studentLink.endsWith('/progress')) throw new Error('Student progress link missing');
+  const studentId = studentLink.split('/').at(-2)!;
   const student = await browser.newContext(); const studentPage = await student.newPage();
   await studentPage.goto(invitation);
   await studentPage.getByLabel('Creá una contraseña').fill('workout-browser-student-12345');

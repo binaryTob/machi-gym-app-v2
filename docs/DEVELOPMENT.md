@@ -68,6 +68,8 @@ corepack pnpm test:e2e
 
 Para validar un bootstrap sin tocar los fixtures de la base habitual, crear una **base PostgreSQL descartable distinta** e indicar su URL mediante variable de entorno. Por ejemplo, desde Bash:
 
+La Fase 6 agrega `MonthlyProgressSnapshot` y un índice parcial activo por alumno/mes/versión, un trigger de inmutabilidad y un índice de mediciones. `db:migrate` debe ejecutarse **antes** de abrir `/student/progress` o `/trainer/students/:id/progress`. Los informes de meses cerrados se finalizan sólo por entrenador/admin mediante el endpoint documentado en [decisiones analíticas](15-phase6-deterministic-analytics.md); las vistas sin snapshot indican cálculo provisional. El seed añade un historial ficticio pequeño y es repetible; si la asignación demo ya existía con inicio posterior a las fechas de ejemplo, se omiten esas sesiones sin editar su procedencia.
+
 ```bash
 docker compose exec db createdb -U machi machi_verify
 DATABASE_URL='postgresql://machi:machi@localhost:5432/machi_verify?schema=public' corepack pnpm db:migrate

@@ -29,22 +29,22 @@ const withDiscomfort = { sessionRpe: 9, perceivedState: 'VERY_DIFFICULT', recove
   ] };
 
 describe('Phase 5 scoped, immutable structured feedback', () => {
-  let app: INestApplication; let db: Db; let trainer: Auth; let studentA: Auth; let studentB: Auth; let foreignTrainer: Auth;
+  let app: INestApplication; let db: Db; let trainer: Auth; let studentA: Auth; let studentB: Auth; let foreignTrainer: Auth; let unassignedTrainer: Auth;
   let orgId: string; let studentAId: string; let studentBId: string; let templateId: string;
   let completeId: string; let partialId: string; let activeId: string; let cancelledId: string; let skippedId: string; let earlyEventId: string;
   beforeAll(async () => {
     process.env.WEB_ORIGIN = origin;
     app = await NestFactory.create(AppModule, { logger: false }); app.setGlobalPrefix('api/v1'); app.useGlobalInterceptors(new Envelope()); app.useGlobalFilters(new Problems()); await app.init(); db = app.get(Db);
     const org = await db.organization.create({ data: { name: 'Feedback A' } }); const otherOrg = await db.organization.create({ data: { name: 'Feedback B' } }); orgId = org.id;
-    async function user(organizationId: string, role: 'ADMIN' | 'STUDENT') {
+    async function user(organizationId: string, role: 'ADMIN' | 'TRAINER' | 'STUDENT') {
       const email = `feedback-${randomUUID()}@example.test`;
       const created = await db.user.create({ data: { email, displayName: role, passwordHash: await argon2.hash(password) } });
       const membership = await db.membership.create({ data: { organizationId, userId: created.id, role } });
-      if (role === 'ADMIN') await db.trainerProfile.create({ data: { organizationId, membershipId: membership.id } });
+      if (role !== 'STUDENT') await db.trainerProfile.create({ data: { organizationId, membershipId: membership.id } });
       else await db.studentProfile.create({ data: { organizationId, membershipId: membership.id, displayName: 'Alumno', contactEmail: email } });
       return { email, membership };
     }
-    const coach = await user(org.id, 'ADMIN'); const other = await user(otherOrg.id, 'ADMIN');
+    const coach = await user(org.id, 'ADMIN'); const other = await user(otherOrg.id, 'ADMIN'); const unassigned = await user(org.id, 'TRAINER');
     const a = await user(org.id, 'STUDENT'); const b = await user(org.id, 'STUDENT');
     studentAId = (await db.studentProfile.findUniqueOrThrow({ where: { membershipId: a.membership.id } })).id;
     studentBId = (await db.studentProfile.findUniqueOrThrow({ where: { membershipId: b.membership.id } })).id;
@@ -55,7 +55,7 @@ describe('Phase 5 scoped, immutable structured feedback', () => {
     templateId = (await db.workoutTemplate.findFirstOrThrow({ where: { organizationId: org.id, trainingPlanVersionId: `demo-version-${org.id}` }, orderBy: { order: 'asc' } })).id;
     const api = request(app.getHttpServer());
     const login = async (email: string) => session(await api.post('/api/v1/auth/login').set('Origin', origin).send({ email, password }).expect(200));
-    trainer = await login(coach.email); studentA = await login(a.email); studentB = await login(b.email); foreignTrainer = await login(other.email);
+    trainer = await login(coach.email); studentA = await login(a.email); studentB = await login(b.email); foreignTrainer = await login(other.email); unassignedTrainer = await login(unassigned.email);
     for (const studentId of [studentAId, studentBId]) await api.post(`/api/v1/students/${studentId}/plan-assignment`).set(auth(trainer)).send({ planId: `demo-plan-${org.id}`, startDate: day(-2) }).expect(201);
     const schedule = async (studentId: string, offset: number) => {
       const result = await api.post(`/api/v1/students/${studentId}/workout-sessions`).set(auth(trainer)).send({ workoutTemplateId: templateId, scheduledDate: day(offset), requestKey: randomUUID() }).expect(201);
@@ -82,6 +82,32 @@ describe('Phase 5 scoped, immutable structured feedback', () => {
     await api.post(`/api/v1/workout-sessions/${skippedId}/skip`).set(auth(trainer)).send({ version: 1 }).expect(201);
   }, 120_000);
   afterAll(async () => { if (app) await app.close(); });
+
+  it('isolates analytics by tenant and student, and preserves idempotent versioned monthly revisions', async () => {
+    const api = request(app.getHttpServer());
+    const own = await api.get('/api/v1/student/me/analytics?period=current-month').set('Cookie', studentA.cookie).expect(200);
+    expect(own.body.data.studentId).toBe(studentAId);
+    expect(own.body.data.organizationId).toBe(orgId);
+    await api.get(`/api/v1/students/${studentBId}/analytics`).set('Cookie', studentA.cookie).expect(403);
+    await api.get(`/api/v1/students/${studentAId}/analytics`).set('Cookie', foreignTrainer.cookie).expect(404);
+    await api.get(`/api/v1/students/${studentAId}/analytics`).set('Cookie', unassignedTrainer.cookie).expect(404);
+    expect((await api.get('/api/v1/trainer/analytics/roster').set('Cookie', unassignedTrainer.cookie).expect(200)).body.data.students).toEqual([]);
+    await api.get(`/api/v1/students/${studentBId}/analytics`).set('Cookie', trainer.cookie).expect(200);
+    const previous = new Date(); previous.setUTCDate(1); previous.setUTCMonth(previous.getUTCMonth() - 2);
+    const monthPath = `/api/v1/students/${studentAId}/analytics/monthly/${previous.getUTCFullYear()}/${previous.getUTCMonth() + 1}`;
+    const created = await api.post(`${monthPath}/finalize`).set(auth(trainer)).send({}).expect(201);
+    const repeated = await api.post(`${monthPath}/finalize`).set(auth(trainer)).send({}).expect(201);
+    expect(repeated.body.data).toEqual(created.body.data);
+    expect(created.body.data.metrics.analyticsVersion).toBe(1);
+    const studentRead = await api.get(`/api/v1/student/me/analytics/monthly/${previous.getUTCFullYear()}/${previous.getUTCMonth() + 1}`).set('Cookie', studentA.cookie).expect(200);
+    expect(studentRead.body.data.finalized).toBe(true);
+    await api.post(`${monthPath}/revise`).set(auth(studentA)).send({ reason: 'Corrección autorizada del registro original' }).expect(403);
+    const revised = await api.post(`${monthPath}/revise`).set(auth(trainer)).send({ reason: 'Corrección autorizada del registro original' }).expect(201);
+    expect(revised.body.data.revision).toBe(2);
+    expect(await db.monthlyProgressSnapshot.count({ where: { organizationId: orgId, studentId: studentAId, year: previous.getUTCFullYear(), month: previous.getUTCMonth() + 1 } })).toBe(2);
+    expect((await api.get(monthPath).set('Cookie', trainer.cookie).expect(200)).body.data.revision).toBe(2);
+    await api.get(monthPath).set('Cookie', foreignTrainer.cookie).expect(404);
+  }, 30_000);
 
   it('accepts completed feedback once, returns exact retries, locks different payloads and denies cross-tenant reads', async () => {
     const api = request(app.getHttpServer());

@@ -17,7 +17,9 @@ test('entrenador invita y edita el perfil; alumno ingresa sin acceso al panel', 
   await page.getByRole('button', { name: 'Crear alumno y enlace' }).click();
   await expect(page.getByText('Compartí este enlace una sola vez')).toBeVisible();
   const invitation = await page.locator('.notice .mono').first().innerText();
-  await page.getByRole('link', { name: /Ana Prueba/ }).click();
+  const progressLink = await page.getByRole('link', { name: /Ana Prueba/ }).first().getAttribute('href');
+  if (!progressLink?.endsWith('/progress')) throw new Error('Student progress link missing');
+  await page.goto(progressLink.slice(0, -'/progress'.length));
   await expect(page.getByRole('heading', { name: studentName })).toBeVisible();
   await page.getByLabel('Nombre', { exact: true }).fill('Ana Actualizada');
   await page.getByRole('button', { name: 'Guardar cambios' }).click();

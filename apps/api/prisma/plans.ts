@@ -48,7 +48,7 @@ export async function seedDemoProgram(db: PrismaClient, organizationId: string, 
   if (!(await db.studentPlanAssignment.findFirst({ where: { organizationId, studentId } }))) {
     await db.studentPlanAssignment.create({ data: {
       organizationId, studentId, trainingPlanId: planId, trainingPlanVersionId: `demo-version-${organizationId}`,
-      assignedByMembershipId: ownerMembershipId, startDate: new Date(),
+      assignedByMembershipId: ownerMembershipId, startDate: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - 2, 1)),
     } });
   }
 }

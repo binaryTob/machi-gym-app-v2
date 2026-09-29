@@ -20,7 +20,7 @@ corepack pnpm dev
 
 Abrir `http://localhost:3000`. Entrar con `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, enrolar TOTP desde el panel, guardar los códigos de recuperación de un solo uso e iniciar sesión nuevamente. El entrenador puede crear alumnos y entregar **manualmente** un enlace de invitación; el reset también se entrega manualmente mediante `POST /api/v1/students/:id/reset-link` autenticado. **No hay proveedor de correo.**
 
-`db:seed` agrega 22 ejercicios, ilustraciones SVG propias, un alumno ficticio (`demo-<organizationId>@example.test`, contraseña `SEED_STUDENT_PASSWORD`), un programa publicado, una sesión programada y **un único ejemplo ficticio completado con feedback/molestia**. Es idempotente y **no corre con `NODE_ENV=production`**. El entrenador navega por `/trainer/exercises`, `/trainer/plans` y `/trainer/students/:id`; el alumno por `/student`, `/student/plan`, `/student/workouts` y `/student/workouts/:id/feedback`.
+`db:seed` agrega 22 ejercicios, ilustraciones SVG propias, un alumno ficticio (`demo-<organizationId>@example.test`, contraseña `SEED_STUDENT_PASSWORD`), un programa publicado, una sesión programada y un pequeño historial ficticio de sesiones, series, pesos y feedback/molestias. Es idempotente y **no corre con `NODE_ENV=production`**. El entrenador navega por `/trainer/students/:id/progress`, y el alumno por `/student/progress` para ver sus métricas.
 
 Nest escucha en `http://localhost:3001`, con `/api/v1/health` y `/api/v1/openapi.json` (contratos Zod); Next reescribe `/api/v1/*` en el puerto 3000 para sesiones/CSRF same-origin. `API_INTERNAL_URL` cambia el destino interno del rewrite. `SESSION_SECURE=true` es obligatorio detrás de HTTPS; `false` sólo en localhost HTTP.
 
@@ -43,11 +43,11 @@ Los tests API usan PostgreSQL real: cubren permisos/RBAC/MFA, tenant, catálogo,
 - `packages/contracts`: esquemas Zod de escritura estrictos y taxonomías compartidas; también generan cuerpos de request de OpenAPI.
 - `docs/prisma/schema.prisma`: modelo objetivo **futuro**, no una migración ni el esquema operativo.
 
-El código operativo soporta perfil con `birthDate` opcional (sin edad persistida), ejercicios canónicos por organización y media verificada, planes reusables publicados e inmutables con asignación versionada, ocurrencias programadas y series realmente realizadas, y feedback opcional/inmutable en 24 horas con molestia estructurada vinculada al evento canónico. **Todavía no existen** métricas mensuales, correcciones de historia finalizada, IA, notificaciones ni colas. Ver el [contexto](docs/PROJECT_CONTEXT.md) para los límites exactos y las capacidades parciales.
+El código operativo soporta perfil con `birthDate` opcional (sin edad persistida), ejercicios canónicos por organización y media verificada, planes reusables publicados e inmutables con asignación versionada, ocurrencias programadas y series realmente realizadas, feedback opcional/inmutable en 24 horas, métricas de período e informes mensuales finalizables. **Todavía no existen** correcciones de historia finalizada, IA, notificaciones ni colas. Ver [decisiones analíticas](docs/15-phase6-deterministic-analytics.md) y el [contexto](docs/PROJECT_CONTEXT.md).
 
 ## Continuidad, seguridad y raíz Git
 
-La continuación natural es el cálculo de métricas deterministas y correcciones auditadas, no una adaptación automática. **No es un despliegue de producción**: hay que aprobar privacidad/jurisdicción/consentimiento/retención, backup/restore y seguridad operativa. Invitaciones/reset siguen siendo manuales y los SVG son ilustraciones, no videos técnicos autorizados. Las decisiones por dominio siguen disponibles en [media](docs/11-exercise-media-policy.md), [planes](docs/12-phase3-plan-decisions.md), [sesiones](docs/13-phase4-workout-execution-decisions.md) y [feedback](docs/14-phase5-feedback-decisions.md).
+La continuación natural tras la analítica es definir correcciones auditadas de datos fuente y propuestas de adaptación revisadas por entrenador, sin modificación automática. **No es un despliegue de producción**: hay que aprobar privacidad/jurisdicción/consentimiento/retención, backup/restore y seguridad operativa. Invitaciones/reset siguen siendo manuales y los SVG son ilustraciones, no videos técnicos autorizados. Las decisiones por dominio siguen disponibles en [media](docs/11-exercise-media-policy.md), [planes](docs/12-phase3-plan-decisions.md), [sesiones](docs/13-phase4-workout-execution-decisions.md), [feedback](docs/14-phase5-feedback-decisions.md) y [analítica](docs/15-phase6-deterministic-analytics.md).
 
 El workflow está en `.github/workflows/verify.yml`. GitHub lo descubre sólo si esta carpeta es la **raíz del repositorio Git**:
 
@@ -88,6 +88,7 @@ La guía completa está en [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
 | [Contexto OpenCode](docs/PROJECT_CONTEXT.md) | Estado real, decisiones, invariantes y próximos trabajos sin depender de esta conversación |
 | [Desarrollo reproducible](docs/DEVELOPMENT.md) | Clonar, configurar entorno, migrar, probar y depurar desde otra OS |
 | [Índice documental](docs/DOCUMENTATION_INDEX.md) | Fuentes operativas, documentos históricos y propuestas futuras |
+| [Analítica determinista](docs/15-phase6-deterministic-analytics.md) | Fórmulas v1, períodos locales y reportes mensuales revisables |
 | [Exercise/media policy](docs/11-exercise-media-policy.md) | Phase 2 ownership decision, seed and media provenance rules |
 | [Phase 3 plan decisions](docs/12-phase3-plan-decisions.md) | Reusable programs, immutable versions, primary assignments, and future session snapshots |
 | [Phase 4 workout decisions](docs/13-phase4-workout-execution-decisions.md) | Explicit scheduling, sealed occurrences, performed-set mutability, rest and safety semantics |

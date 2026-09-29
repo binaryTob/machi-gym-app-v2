@@ -43,6 +43,7 @@ export const activityCreateSchema = z.object({ name: z.string().trim().min(1).ma
 export const weightSchema = z.object({ weightKg: z.number().min(20).max(500), measuredAt: z.string().datetime({ offset: true }) }).strict();
 export const readinessSchema = z.object({ version: z.number().int().positive() }).strict();
 export const noteSchema = z.object({ content: z.string().trim().min(1).max(2000) }).strict();
+export const monthlyProgressRevisionSchema = z.object({ reason: z.string().trim().min(10).max(500) }).strict();
 export type StudentProfileInput = z.infer<typeof studentProfileSchema>;
 
 export const muscleGroupSchema = z.enum(['CHEST', 'BACK', 'SHOULDERS', 'BICEPS', 'TRICEPS', 'FOREARMS', 'QUADRICEPS', 'HAMSTRINGS', 'GLUTES', 'CALVES', 'CORE', 'LOWER_BACK', 'FULL_BODY']);

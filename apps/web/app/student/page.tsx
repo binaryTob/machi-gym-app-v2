@@ -20,6 +20,7 @@ export default function StudentHome() {
   if (!me || !home) return <p role="status">{t('student.loading')} {error}</p>;
   const current = home.today;
   return <>
+    <a className="button secondary" href="/student/progress">Ver mi progreso →</a>
     <div className="row wrap hero"><div><div className="eyebrow">{t('student.eyebrow')}</div><h1>{t('student.greeting', { name: home.profile.displayName })}</h1><p className="muted">{t('student.intro')}</p></div><SignOut/></div>
     <section className="card workout-home"><div className="eyebrow">{current?.kind === 'IN_PROGRESS' ? t('workout.inProgress') : current?.kind === 'DUE' ? t('workout.homeEyebrow') : t('workout.homeUpcoming')}</div>
       {current ? <><h2>{current.name}</h2><div className="row wrap"><span className="badge">{current.kind === 'IN_PROGRESS' ? t('workout.progressSets', { completed: current.progress.completedSets, total: current.progress.totalSets }) : t('workout.progressExercises', { completed: 0, total: current.progress.totalExercises })}</span>{current.expectedDurationMinutes && <span>{current.expectedDurationMinutes} min</span>}</div><p className="muted">{current.scheduledDate.slice(0, 10)} · {enumText(current.status)}</p><a className="button" href={`/student/workouts/${current.id}`}>{current.kind === 'IN_PROGRESS' ? t('workout.resume') : current.kind === 'DUE' ? t('workout.start') : t('workout.view')}</a></> : <><h2>{t('workout.homeEmpty')}</h2><a href="/student/plan" className="button secondary">{t('plans.navStudent')}</a></>}

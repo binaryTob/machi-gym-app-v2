@@ -273,6 +273,7 @@ model Organization {
   workoutSessions WorkoutSession[]
   sessionFeedbacks SessionFeedback[]
   discomfortReports DiscomfortReport[]
+  monthlyProgressSnapshots MonthlyProgressSnapshot[]
 }
 
 model User {
@@ -410,6 +411,7 @@ model StudentProfile {
   workoutSessions                WorkoutSession[]
   sessionFeedbacks               SessionFeedback[]
   discomfortReports              DiscomfortReport[]
+  monthlyProgressSnapshots        MonthlyProgressSnapshot[]
 
   @@unique([id, organizationId])
   @@unique([membershipId, organizationId])
@@ -475,6 +477,30 @@ model BodyWeightMeasurement {
   createdAt              DateTime       @default(now())
   student                StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict)
   recordedBy             Membership     @relation(fields: [recordedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, studentId, measuredAt])
+}
+
+model MonthlyProgressSnapshot {
+  id              String         @id @default(cuid())
+  organizationId  String
+  studentId       String
+  year            Int
+  month           Int
+  analyticsVersion Int
+  revision        Int
+  periodStart     DateTime       @db.Date
+  periodEnd       DateTime       @db.Date
+  timezone        String
+  metrics         Json
+  generatedAt     DateTime       @default(now())
+  supersededAt    DateTime?
+  correctionReason String?
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, map: "monthly_progress_org_fk")
+  student         StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict, map: "monthly_progress_student_fk")
+
+  @@unique([organizationId, studentId, year, month, analyticsVersion, revision], map: "monthly_progress_revision_key")
+  @@index([organizationId, studentId, year, month], map: "monthly_progress_month_idx")
 }
 
 model TrainerNote {

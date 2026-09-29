@@ -5,6 +5,7 @@ import { seedExercises, exerciseSeed } from './exercises';
 import { seedDemoProgram } from './plans';
 import { seedDemoOccurrence } from './workouts';
 import { seedDemoFeedback } from './feedback';
+import { seedDemoAnalytics } from './analytics';
 
 async function main(): Promise<void> {
   if (process.env.NODE_ENV === 'production') throw new Error('Demo account and workout seed is development-only');
@@ -28,6 +29,7 @@ async function main(): Promise<void> {
     await seedDemoProgram(db, owner.organizationId, owner.id, studentPassword);
     await seedDemoOccurrence(db, owner.organizationId, owner.id);
     await seedDemoFeedback(db, owner.organizationId, owner.id);
+    await seedDemoAnalytics(db, owner.organizationId, owner.id);
     console.info(`Trainer-owner ${email} ready with ${exerciseSeed.length} curated exercises, a scheduled workout and one fictional feedback example.`);
   } finally { await db.$disconnect(); }
 }

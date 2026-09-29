@@ -28,6 +28,7 @@
 - [12 Reusable plans](12-phase3-plan-decisions.md): planes de organización y asignaciones versionadas; **sustituye** la idea antigua de un plan identidad por alumno.
 - [13 Workout execution](13-phase4-workout-execution-decisions.md): scheduling manual, snapshot al programar, estado, sets reales y timer local.
 - [14 Feedback decisions](14-phase5-feedback-decisions.md): envío único en 24 h, recuperación subjetiva, molestias relacionales y evento temprano canónico.
+- [15 Analítica determinista](15-phase6-deterministic-analytics.md): períodos, fórmulas v1, autorización, insuficiencia de datos y snapshots mensuales auditables.
 
 ## Material histórico o de diseño futuro
 

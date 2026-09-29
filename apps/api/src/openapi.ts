@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { acceptInvitationSchema, activityCreateSchema, assignmentSchema, cancelWorkoutSchema, constraintSchema, draftVersionEditSchema, emailSchema, exerciseCreateSchema, exerciseMediaSchema, exerciseStatusSchema, exerciseUpdateSchema, feedbackSubmitSchema, finishWorkoutSchema, loginSchema, newPlanVersionSchema, noteSchema, planArchiveSchema, planCloneSchema, planCreateSchema, planEditSchema, planRevisionSchema, programmedExerciseCreateSchema, programmedExerciseEditSchema, readinessSchema, reorderSchema, resetPasswordSchema, scheduleWorkoutSchema, setPerformanceSchema, skipWorkoutSchema, startWorkoutSchema, studentCreateSchema, studentProfileSchema, studentSelfProfileSchema, voidPlanVersionSchema, weightSchema, workoutCreateSchema, workoutEditSchema } from '@machi-gym/contracts';
+import { acceptInvitationSchema, activityCreateSchema, assignmentSchema, cancelWorkoutSchema, constraintSchema, draftVersionEditSchema, emailSchema, exerciseCreateSchema, exerciseMediaSchema, exerciseStatusSchema, exerciseUpdateSchema, feedbackSubmitSchema, finishWorkoutSchema, loginSchema, monthlyProgressRevisionSchema, newPlanVersionSchema, noteSchema, planArchiveSchema, planCloneSchema, planCreateSchema, planEditSchema, planRevisionSchema, programmedExerciseCreateSchema, programmedExerciseEditSchema, readinessSchema, reorderSchema, resetPasswordSchema, scheduleWorkoutSchema, setPerformanceSchema, skipWorkoutSchema, startWorkoutSchema, studentCreateSchema, studentProfileSchema, studentSelfProfileSchema, voidPlanVersionSchema, weightSchema, workoutCreateSchema, workoutEditSchema } from '@machi-gym/contracts';
 import { Public } from './common';
 
 // Keep the converter's very deep conditional types out of the API typecheck;
@@ -73,6 +73,13 @@ export class OpenApiController {
       '/workout-sessions/{id}/skip': { post: { parameters: path('id'), requestBody: body(skipWorkoutSchema), responses: json } },
       '/workout-sessions/{id}/feedback': { get: { parameters: path('id'), summary: 'Scoped eligibility, 24-hour deadline, early safety facts and immutable feedback', responses: json }, post: { parameters: path('id'), summary: 'Submit once, with retry-safe structured discomfort reports', requestBody: body(feedbackSubmitSchema), responses: json } },
       '/students/{id}/feedback-signals': { get: { parameters: path('id'), summary: 'Assigned trainer/admin factual recent recovery and discomfort signals', responses: json } },
+      '/student/me/analytics': { get: { summary: 'Live own deterministic metrics; period=current-week|previous-week|current-month|previous-month|last-30-days|custom; custom requires start and end dates', responses: json } },
+      '/student/me/analytics/monthly/{year}/{month}': { get: { summary: 'Own calendar month (frozen if finalized)', parameters: [...path('year'), ...path('month')], responses: json } },
+      '/students/{id}/analytics': { get: { summary: 'Authorized student period metrics', parameters: path('id'), responses: json } },
+      '/students/{id}/analytics/monthly/{year}/{month}': { get: { parameters: [...path('id'), ...path('year'), ...path('month')], responses: json } },
+      '/students/{id}/analytics/monthly/{year}/{month}/finalize': { post: { summary: 'Idempotently freeze a closed calendar month', parameters: [...path('id'), ...path('year'), ...path('month')], responses: json } },
+      '/students/{id}/analytics/monthly/{year}/{month}/revise': { post: { summary: 'Audited new revision after an authoritative correction', parameters: [...path('id'), ...path('year'), ...path('month')], requestBody: body(monthlyProgressRevisionSchema), responses: json } },
+      '/trainer/analytics/roster': { get: { summary: 'Batched current-month descriptive facts for authorized roster (first page)', responses: json } },
       '/health': { get: { responses: json } },
     } };
   }
