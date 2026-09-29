@@ -89,7 +89,8 @@ function validExercise(value: z.infer<typeof exerciseFields>): boolean {
 }
 export const exerciseCreateSchema = exerciseFields.strict().refine(validExercise, 'Check muscles, equipment and load mode');
 export const exerciseUpdateSchema = exerciseFields.partial().extend({ version: z.number().int().positive() }).strict();
-export const exerciseStatusSchema = z.object({ version: z.number().int().positive(), active: z.boolean() }).strict();
+export const exerciseStatusSchema = z.object({ version: z.number().int().positive(), active: z.boolean().optional(), aiEligible: z.boolean().optional() }).strict()
+  .refine((value) => value.active !== undefined || value.aiEligible !== undefined, 'Select at least one status change');
 export const exerciseListSchema = z.object({
   q: z.string().trim().max(80).optional(),
   muscle: muscleGroupSchema.optional(),
@@ -217,3 +218,46 @@ export const feedbackSubmitSchema = z.object({
   if (new Set(value.discomfortReports.map((report) => report.bodyRegion)).size !== value.discomfortReports.length) ctx.addIssue({ code: 'custom', path: ['discomfortReports'], message: 'Cada zona puede aparecer una sola vez por sesión.' });
 });
 export type FeedbackSubmission = z.infer<typeof feedbackSubmitSchema>;
+
+// AI output is untrusted. No free-form exercise names or numeric claims in
+// explanations; numbers shown to trainers come from application-owned facts.
+const rationale = z.string().trim().min(3).max(300)
+  .refine((text) => !/\d/.test(text), 'Use qualitative explanations without invented numbers')
+  .refine((text) => !/\b(diagn[oó]stic\w*|patolog\w*|fractur\w*|lesi[oó]n|injury|rehabilit\w*|treat\w*|terap[ií]a|curar?)\b/i.test(text), 'No medical diagnosis or treatment claims');
+export const aiProposalSchema = z.object({
+  planName: z.string().trim().min(3).max(120), goal: goalSchema,
+  summary: rationale,
+  workouts: z.array(z.object({
+    name: z.string().trim().min(2).max(120), estimatedDurationMinutes: z.number().int().min(10).max(240),
+    reason: rationale,
+    exercises: z.array(z.object({
+      exerciseId: z.string().min(1).max(128), sets: z.number().int().min(1).max(6),
+      repsMin: z.number().int().min(1).max(30), repsMax: z.number().int().min(1).max(30),
+      intensityMode: intensityModeSchema, targetRir: z.number().int().min(0).max(10).nullable(),
+      targetRpe: z.number().min(1).max(10).nullable(), restSeconds: z.number().int().min(30).max(300),
+      suggestedLoadKg: loadKg.nullable(), reason: rationale,
+    }).strict()).min(1).max(12),
+  }).strict()).min(1).max(7),
+}).strict().superRefine((proposal, ctx) => {
+  for (const [index, workout] of proposal.workouts.entries()) {
+    const ids = new Set<string>();
+    for (const [position, exercise] of workout.exercises.entries()) {
+      if (ids.has(exercise.exerciseId)) ctx.addIssue({ code: 'custom', path: ['workouts', index, 'exercises', position, 'exerciseId'], message: 'Duplicate exercise in workout' });
+      ids.add(exercise.exerciseId);
+      if (exercise.repsMin > exercise.repsMax) ctx.addIssue({ code: 'custom', path: ['workouts', index, 'exercises', position, 'repsMax'], message: 'Invalid repetition range' });
+      if ((exercise.intensityMode === 'RIR' && (exercise.targetRir === null || exercise.targetRpe !== null)) ||
+        (exercise.intensityMode === 'RPE' && (exercise.targetRpe === null || exercise.targetRir !== null)) ||
+        (exercise.intensityMode === 'NONE' && (exercise.targetRir !== null || exercise.targetRpe !== null)))
+        ctx.addIssue({ code: 'custom', path: ['workouts', index, 'exercises', position, 'intensityMode'], message: 'Intensity target does not match mode' });
+    }
+  }
+});
+export type AiProposal = z.infer<typeof aiProposalSchema>;
+export const aiRequestSchema = z.object({
+  requestKey: z.string().uuid(), type: z.enum(['INITIAL', 'ADAPTATION']),
+  excludedExerciseIds: z.array(z.string().min(1).max(128)).max(100).default([]),
+  unavailableEquipment: z.array(equipmentSchema).max(12).default([]),
+}).strict();
+export const aiEditSchema = z.object({ revision: z.number().int().positive(), proposal: aiProposalSchema }).strict();
+export const aiDecisionSchema = z.object({ revision: z.number().int().positive() }).strict();
+export const aiRejectSchema = aiDecisionSchema.extend({ reason: z.string().trim().min(3).max(500) }).strict();

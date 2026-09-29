@@ -12,6 +12,9 @@ import { AssignmentController, AssignmentService } from './assignments';
 import { WorkoutController, WorkoutService } from './workouts';
 import { FeedbackController, FeedbackService } from './feedback';
 import { AnalyticsController, AnalyticsService } from './analytics';
+import { AiProviderConfig } from './ai-provider';
+import { TrainingContextBuilder } from './ai-context';
+import { TrainingAiController, TrainingAiService } from './training-ai';
 
-@Module({ controllers: [AuthController, StudentController, DashboardController, HealthController, OpenApiController, ExerciseController, PlanController, PlanVersionController, ProgrammingController, AssignmentController, WorkoutController, FeedbackController, AnalyticsController], providers: [Db, Reflector, originProvider, guardProvider, AuthService, StudentService, ExerciseService, PlanService, ProgrammingService, AssignmentService, WorkoutService, FeedbackService, AnalyticsService] })
+@Module({ controllers: [AuthController, StudentController, DashboardController, HealthController, OpenApiController, ExerciseController, PlanController, PlanVersionController, ProgrammingController, AssignmentController, WorkoutController, FeedbackController, AnalyticsController, TrainingAiController], providers: [Db, Reflector, originProvider, guardProvider, AuthService, StudentService, ExerciseService, PlanService, ProgrammingService, AssignmentService, WorkoutService, FeedbackService, AnalyticsService, AiProviderConfig, TrainingContextBuilder, TrainingAiService] })
 export class AppModule {}

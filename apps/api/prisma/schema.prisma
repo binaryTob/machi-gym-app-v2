@@ -227,6 +227,20 @@ enum RecoveryState {
   VERY_TIRED
 }
 
+enum AiProposalType {
+  INITIAL
+  ADAPTATION
+}
+
+enum AiProposalStatus {
+  GENERATING
+  READY
+  VALIDATION_FAILED
+  PROVIDER_FAILED
+  APPROVED
+  REJECTED
+}
+
 enum BodyRegion {
   HEAD_NECK
   LEFT_SHOULDER
@@ -274,6 +288,7 @@ model Organization {
   sessionFeedbacks SessionFeedback[]
   discomfortReports DiscomfortReport[]
   monthlyProgressSnapshots MonthlyProgressSnapshot[]
+  aiProposals AiTrainingProposal[]
 }
 
 model User {
@@ -316,6 +331,8 @@ model Membership {
   scheduledSessions WorkoutSession[] @relation("SessionScheduler")
   cancelledSessions WorkoutSession[] @relation("SessionCanceller")
   skippedSessions WorkoutSession[] @relation("SessionSkipper")
+  aiRequests AiTrainingProposal[] @relation("AiRequester")
+  aiReviews AiTrainingProposal[] @relation("AiReviewer")
 
   @@unique([organizationId, userId])
   @@unique([id, organizationId])
@@ -412,6 +429,7 @@ model StudentProfile {
   sessionFeedbacks               SessionFeedback[]
   discomfortReports              DiscomfortReport[]
   monthlyProgressSnapshots        MonthlyProgressSnapshot[]
+  aiProposals                    AiTrainingProposal[]
 
   @@unique([id, organizationId])
   @@unique([membershipId, organizationId])
@@ -634,11 +652,50 @@ model TrainingPlanVersion {
   workouts                WorkoutTemplate[]
   assignments             StudentPlanAssignment[]
   workoutSessions         WorkoutSession[]
+  aiSourceProposals       AiTrainingProposal[] @relation("AiSourceVersion")
+  aiApprovedProposals     AiTrainingProposal[] @relation("AiApprovedVersion")
 
   @@unique([trainingPlanId, versionNumber])
   @@unique([id, organizationId])
   @@unique([id, organizationId, trainingPlanId])
   @@index([trainingPlanId, status])
+}
+
+model AiTrainingProposal {
+  id                     String @id @default(cuid())
+  organizationId         String
+  studentId              String
+  requestedByMembershipId String
+  requestKey             String
+  type                   AiProposalType
+  status                 AiProposalStatus @default(GENERATING)
+  sourceVersionId        String?
+  approvedVersionId      String? @unique(map: "ai_proposal_approved_version")
+  provider               String
+  model                  String
+  promptVersion          String
+  contextVersion         String
+  contextHash            String
+  contextSummary         Json
+  originalProposal       Json?
+  editedProposal         Json?
+  validationResult       Json
+  revision               Int @default(1)
+  attempts               Int @default(1)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now()) @updatedAt
+  reviewedAt             DateTime?
+  reviewedByMembershipId String?
+  rejectionReason        String?
+  organization           Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, map: "ai_proposal_organization_fk")
+  student                StudentProfile @relation(fields: [studentId, organizationId], references: [id, organizationId], onDelete: Restrict, map: "ai_proposal_student_fk")
+  requester              Membership @relation("AiRequester", fields: [requestedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict, map: "ai_proposal_requester_fk")
+  reviewer               Membership? @relation("AiReviewer", fields: [reviewedByMembershipId, organizationId], references: [id, organizationId], onDelete: Restrict, map: "ai_proposal_reviewer_fk")
+  sourceVersion          TrainingPlanVersion? @relation("AiSourceVersion", fields: [sourceVersionId, organizationId], references: [id, organizationId], onDelete: Restrict, map: "ai_proposal_source_fk")
+  approvedVersion        TrainingPlanVersion? @relation("AiApprovedVersion", fields: [approvedVersionId, organizationId], references: [id, organizationId], onDelete: Restrict, map: "ai_proposal_approved_fk")
+
+  @@unique([organizationId, requestKey], map: "ai_proposal_request_key")
+  @@index([organizationId, studentId, createdAt], map: "ai_proposal_roster")
 }
 
 model WorkoutTemplate {

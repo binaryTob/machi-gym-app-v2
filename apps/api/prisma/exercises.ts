@@ -46,7 +46,7 @@ export async function seedExercises(db: PrismaClient, organizationId: string, ve
   for (const entry of exerciseSeed) {
     const exercise = await db.exercise.upsert({
       where: { organizationId_slug: { organizationId, slug: entry.slug } }, update: {},
-      create: { ...entry, organizationId, aliases: entry.aliases ?? [], searchText: normalizeExerciseSearch([entry.name, ...(entry.aliases ?? [])].join(' ')), cautionNotes: 'Si aparece una molestia, detené el movimiento y comentáselo a tu entrenador.', performanceMode: entry.performanceMode ?? ExercisePerformanceMode.WEIGHT_REPS, loadEntryConvention: entry.loadEntryConvention === undefined ? LoadEntryConvention.TOTAL_EXTERNAL_LOAD : entry.loadEntryConvention, loadMultiplier: entry.loadMultiplier ?? 1 },
+      create: { ...entry, organizationId, aiEligible: true, aliases: entry.aliases ?? [], searchText: normalizeExerciseSearch([entry.name, ...(entry.aliases ?? [])].join(' ')), cautionNotes: 'Si aparece una molestia, detené el movimiento y comentáselo a tu entrenador.', performanceMode: entry.performanceMode ?? ExercisePerformanceMode.WEIGHT_REPS, loadEntryConvention: entry.loadEntryConvention === undefined ? LoadEntryConvention.TOTAL_EXTERNAL_LOAD : entry.loadEntryConvention, loadMultiplier: entry.loadMultiplier ?? 1 },
       select: { id: true, media: { select: { id: true }, take: 1 } },
     });
     if (exercise.media.length > 0) continue;

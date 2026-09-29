@@ -48,6 +48,7 @@ Copiar el resultado **sólo** a `apps/api/.env` local. No pegarlo en GitHub, iss
 | `SEED_STUDENT_PASSWORD` | Seed dev | Credencial del alumno ficticio; distinta del dueño. |
 | `API_INTERNAL_URL` | Rewrite de Next.js (opcional) | URL interna de Nest si no es `http://127.0.0.1:3001`. |
 | `NODE_ENV` | Guardia del seed | `db:seed` **rechaza** `production`; no ejecutar fixtures con datos reales. |
+| `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY` | Propuestas de Fase 7 | Opcionales. Sin proveedor el resto funciona; `AI_PROVIDER=openai` requiere modelo y clave privados. `AI_PROVIDER=fake` sólo para desarrollo/tests y no hace llamadas de red; nunca usarlo como recomendación real. |
 
 La web está en `http://localhost:3000`; Next reescribe `/api/v1/*` hacia Nest en `http://localhost:3001`. Salud: `http://localhost:3000/api/v1/health`. OpenAPI de cuerpos de request Zod: `/api/v1/openapi.json`. La API necesita PostgreSQL disponible. El primer login del dueño usa `SEED_ADMIN_EMAIL`/password, luego el dashboard permite enrolar TOTP y guardar ocho códigos de recuperación. El alumno ficticio usa el correo `demo-<organizationId>@example.test` generado al seed; también podés crear uno desde el dashboard del entrenador y entregar manualmente el enlace de invitación de un solo uso. **No hay correo automático**.
 
@@ -69,6 +70,8 @@ corepack pnpm test:e2e
 Para validar un bootstrap sin tocar los fixtures de la base habitual, crear una **base PostgreSQL descartable distinta** e indicar su URL mediante variable de entorno. Por ejemplo, desde Bash:
 
 La Fase 6 agrega `MonthlyProgressSnapshot` y un índice parcial activo por alumno/mes/versión, un trigger de inmutabilidad y un índice de mediciones. `db:migrate` debe ejecutarse **antes** de abrir `/student/progress` o `/trainer/students/:id/progress`. Los informes de meses cerrados se finalizan sólo por entrenador/admin mediante el endpoint documentado en [decisiones analíticas](15-phase6-deterministic-analytics.md); las vistas sin snapshot indican cálculo provisional. El seed añade un historial ficticio pequeño y es repetible; si la asignación demo ya existía con inicio posterior a las fechas de ejemplo, se omiten esas sesiones sin editar su procedencia.
+
+La Fase 7 agrega `AiTrainingProposal` y sus FK/trigger. `db:migrate` también debe ejecutarse antes de usar `/trainer/students/:id/ai`. El seed nuevo habilita los ejercicios ficticios iniciales para el fake sin llamar proveedores. **En bases ya sembradas, el seed no sobreescribe la elección previa de elegibilidad:** el entrenador puede habilitar expresamente los ejercicios activos desde su ficha. Para E2E sobre una base **descartable recién sembrada**, exportar también `AI_PROVIDER=fake` junto con `DATABASE_URL` y credenciales seed; la aplicación puede arrancar sin las variables AI. Ver [decisiones Fase 7](16-phase7-ai-proposals.md).
 
 ```bash
 docker compose exec db createdb -U machi machi_verify

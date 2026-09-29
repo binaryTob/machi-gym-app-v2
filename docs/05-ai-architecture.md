@@ -1,5 +1,7 @@
 # AI Architecture
 
+> **Propuesta histórica multietapa.** Para la implementación operativa de Fase 7 consultar [decisiones de propuestas asistidas](16-phase7-ai-proposals.md) y el código. La cola/Redis, el motor clínico de reglas, las correcciones y la narrativa mensual descritos aquí no se implementaron en Fase 7; este documento conserva opciones futuras y no reemplaza los contratos ni las migraciones reales.
+
 ## 1. Positioning
 
 AI is a planning assistant and language layer. It is not a domain authority, data store, rules engine, medical system, or autonomous coach.

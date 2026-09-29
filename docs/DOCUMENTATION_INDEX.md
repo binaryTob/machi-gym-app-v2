@@ -29,10 +29,11 @@
 - [13 Workout execution](13-phase4-workout-execution-decisions.md): scheduling manual, snapshot al programar, estado, sets reales y timer local.
 - [14 Feedback decisions](14-phase5-feedback-decisions.md): envío único en 24 h, recuperación subjetiva, molestias relacionales y evento temprano canónico.
 - [15 Analítica determinista](15-phase6-deterministic-analytics.md): períodos, fórmulas v1, autorización, insuficiencia de datos y snapshots mensuales auditables.
+- [16 Propuestas asistidas por IA](16-phase7-ai-proposals.md): proveedor opcional, contexto mínimo, catálogo canónico, reglas, borrador aprobado por entrenador y límites.
 
 ## Material histórico o de diseño futuro
 
-- [05 AI architecture](05-ai-architecture.md): **propuesta** para una integración futura, sin proveedor/worker ni generación implementada. Nunca asumir que existen esas tablas en producción.
+- [05 AI architecture](05-ai-architecture.md): **propuesta histórica** con cola/worker y capacidades clínicas/narrativas aún no implementadas; la Fase 7 operativa está en [16](16-phase7-ai-proposals.md).
 - [08 Implementation roadmap](08-implementation-roadmap.md): secuencia/posibles próximos trabajos, **no un límite final** del proyecto. Revalidar requisitos contra código cuando se inicie una capacidad nueva.
 - [10 Pre-implementation review](10-pre-implementation-review.md): registro histórico de revisión previa, con enmiendas por decisiones posteriores. Algunas afirmaciones originales están explícitamente **superseded** y no deben reimplantarse.
 - [`prisma/schema.prisma`](prisma/schema.prisma): **propuesta multietapa**, contiene modelos que no están en el esquema operativo (correcciones, IA, métricas/reportes). Se valida como documento técnico, pero **jamás se usa para `db:migrate` o seed**.

@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { acceptInvitationSchema, activityCreateSchema, assignmentSchema, cancelWorkoutSchema, constraintSchema, draftVersionEditSchema, emailSchema, exerciseCreateSchema, exerciseMediaSchema, exerciseStatusSchema, exerciseUpdateSchema, feedbackSubmitSchema, finishWorkoutSchema, loginSchema, monthlyProgressRevisionSchema, newPlanVersionSchema, noteSchema, planArchiveSchema, planCloneSchema, planCreateSchema, planEditSchema, planRevisionSchema, programmedExerciseCreateSchema, programmedExerciseEditSchema, readinessSchema, reorderSchema, resetPasswordSchema, scheduleWorkoutSchema, setPerformanceSchema, skipWorkoutSchema, startWorkoutSchema, studentCreateSchema, studentProfileSchema, studentSelfProfileSchema, voidPlanVersionSchema, weightSchema, workoutCreateSchema, workoutEditSchema } from '@machi-gym/contracts';
+import { acceptInvitationSchema, activityCreateSchema, aiDecisionSchema, aiEditSchema, aiRejectSchema, aiRequestSchema, assignmentSchema, cancelWorkoutSchema, constraintSchema, draftVersionEditSchema, emailSchema, exerciseCreateSchema, exerciseMediaSchema, exerciseStatusSchema, exerciseUpdateSchema, feedbackSubmitSchema, finishWorkoutSchema, loginSchema, monthlyProgressRevisionSchema, newPlanVersionSchema, noteSchema, planArchiveSchema, planCloneSchema, planCreateSchema, planEditSchema, planRevisionSchema, programmedExerciseCreateSchema, programmedExerciseEditSchema, readinessSchema, reorderSchema, resetPasswordSchema, scheduleWorkoutSchema, setPerformanceSchema, skipWorkoutSchema, startWorkoutSchema, studentCreateSchema, studentProfileSchema, studentSelfProfileSchema, voidPlanVersionSchema, weightSchema, workoutCreateSchema, workoutEditSchema } from '@machi-gym/contracts';
 import { Public } from './common';
 
 // Keep the converter's very deep conditional types out of the API typecheck;
@@ -80,6 +80,13 @@ export class OpenApiController {
       '/students/{id}/analytics/monthly/{year}/{month}/finalize': { post: { summary: 'Idempotently freeze a closed calendar month', parameters: [...path('id'), ...path('year'), ...path('month')], responses: json } },
       '/students/{id}/analytics/monthly/{year}/{month}/revise': { post: { summary: 'Audited new revision after an authoritative correction', parameters: [...path('id'), ...path('year'), ...path('month')], requestBody: body(monthlyProgressRevisionSchema), responses: json } },
       '/trainer/analytics/roster': { get: { summary: 'Batched current-month descriptive facts for authorized roster (first page)', responses: json } },
+      '/trainer/ai/availability': { get: { summary: 'Optional AI provider availability', responses: json } },
+      '/students/{id}/ai-context': { get: { parameters: path('id'), summary: 'Scoped minimized generation preview for trainer', responses: json } },
+      '/students/{id}/ai-proposals': { get: { parameters: path('id'), summary: 'Scoped trainer proposal history', responses: json }, post: { parameters: path('id'), requestBody: body(aiRequestSchema), summary: 'Request initial or adaptive draft proposal (never publish)', responses: json } },
+      '/ai-proposals/{id}': { get: { parameters: path('id'), responses: json }, patch: { parameters: path('id'), requestBody: body(aiEditSchema), responses: json } },
+      '/ai-proposals/{id}/retry': { post: { parameters: path('id'), requestBody: body(aiDecisionSchema), responses: json } },
+      '/ai-proposals/{id}/reject': { post: { parameters: path('id'), requestBody: body(aiRejectSchema), responses: json } },
+      '/ai-proposals/{id}/approve': { post: { parameters: path('id'), requestBody: body(aiDecisionSchema), summary: 'Create trainer-reviewed DRAFT only; publish and assign separately', responses: json } },
       '/health': { get: { responses: json } },
     } };
   }

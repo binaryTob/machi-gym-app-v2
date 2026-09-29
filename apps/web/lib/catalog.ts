@@ -4,7 +4,7 @@ export type CatalogExercise = {
   primaryMuscleGroup: string; secondaryMuscleGroups: string[]; equipment: string[];
   movementPattern: string; difficulty: string; performanceMode: 'WEIGHT_REPS' | 'REPS_ONLY';
   loadEntryConvention: string | null; loadMultiplier: string; instructions: string; commonMistakes: string;
-  cautionNotes: string | null; active: boolean; version?: number; media: CatalogMedia[];
+  cautionNotes: string | null; active: boolean; aiEligible?: boolean; version?: number; media: CatalogMedia[];
 };
 export type CatalogPage = { items: CatalogExercise[]; nextCursor: string | null; hasMore: boolean };
 export function mediaPreview(exercise: CatalogExercise): string | null {

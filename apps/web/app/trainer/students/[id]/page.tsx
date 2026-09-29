@@ -42,6 +42,7 @@ export default function StudentDetail() {
   if (!me || !student) return <p role="status">{t('profile.loading')} {error}</p>;
   return <>
     <a className="button secondary" href={`/trainer/students/${encodeURIComponent(id)}/progress`}>Ver progreso →</a>
+    <a className="button secondary" href={`/trainer/students/${encodeURIComponent(id)}/ai`}>Propuestas con IA →</a>
     <a className="back" href="/trainer">{t('profile.back')}</a>
     <div className="hero"><div className="eyebrow">{t('profile.eyebrow')} · {enumText(student.status)}</div><h1>{student.displayName}</h1><p className="muted">{t('profile.intro')}</p></div>
     {error && <p className="error" role="alert">{error}</p>}{message && <p className="success" role="status">{message}</p>}

@@ -87,12 +87,12 @@ export class ExerciseService {
     } catch (error) { this.unique(error); }
   }
   async status(id: string, raw: unknown, actor: Actor) {
-    const { active, version } = input(exerciseStatusSchema, raw);
+    const { active, aiEligible, version } = input(exerciseStatusSchema, raw);
     const existing = await this.owned(id, actor);
     await this.db.$transaction(async (tx) => {
-      const result = await tx.exercise.updateMany({ where: { id: existing.id, organizationId: actor.organizationId, version }, data: { active, version: { increment: 1 } } });
+      const result = await tx.exercise.updateMany({ where: { id: existing.id, organizationId: actor.organizationId, version }, data: { ...(active === undefined ? {} : { active }), ...(aiEligible === undefined ? {} : { aiEligible }), version: { increment: 1 } } });
       if (result.count !== 1) throw new ConflictException('Exercise changed; refresh and retry');
-      await this.audit(actor, id, active ? 'EXERCISE_ACTIVATED' : 'EXERCISE_DEACTIVATED', tx);
+      await this.audit(actor, id, active === undefined ? 'EXERCISE_AI_ELIGIBILITY_CHANGED' : active ? 'EXERCISE_ACTIVATED' : 'EXERCISE_DEACTIVATED', tx);
     });
     return this.detail(id, actor);
   }

@@ -1,4 +1,4 @@
-name: Phase 1–5 checks
+name: Phase 1–7 checks
 on:
   push:
   pull_request:
@@ -42,3 +42,5 @@ jobs:
       - run: corepack pnpm --filter @machi-gym/api exec prisma validate
       - run: corepack pnpm --filter @machi-gym/web exec playwright install --with-deps chromium
       - run: corepack pnpm test:e2e
+        env:
+          AI_PROVIDER: fake
